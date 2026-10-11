@@ -46,6 +46,20 @@ async def test_cors_allows_configured_origin_only(client: httpx.AsyncClient) -> 
     assert "access-control-allow-origin" not in other.headers
 
 
+async def test_cors_regex_allows_matching_preview_domains_only() -> None:
+    settings = Settings(cors_origin_regex=r"^https://oratio[a-z0-9-]*\.vercel\.app$")
+    async with _client(settings) as http:
+        preview = await http.get(
+            "/api/health", headers={"origin": "https://oratio-git-main.vercel.app"}
+        )
+        lookalike = await http.get(
+            "/api/health", headers={"origin": "https://oratio.vercel.app.evil.example"}
+        )
+
+    assert preview.headers["access-control-allow-origin"] == "https://oratio-git-main.vercel.app"
+    assert "access-control-allow-origin" not in lookalike.headers
+
+
 async def test_spike_routes_are_absent_by_default(client: httpx.AsyncClient) -> None:
     assert (await client.get("/api/spike/stream")).status_code == 404
     assert (await client.post("/api/spike/bench", json={})).status_code == 404
@@ -67,12 +81,6 @@ async def test_bench_rejects_out_of_range_input(
     spike_client: httpx.AsyncClient, body: dict[str, object]
 ) -> None:
     assert (await spike_client.post("/api/spike/bench", json=body)).status_code == 422
-
-
-async def test_bedrock_rejects_malformed_model_id(spike_client: httpx.AsyncClient) -> None:
-    response = await spike_client.post("/api/spike/bedrock", json={"model_id": "bad id; rm"})
-
-    assert response.status_code == 422
 
 
 def test_synth_speech_is_deterministic_and_bounded() -> None:

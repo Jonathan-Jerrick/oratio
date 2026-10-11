@@ -21,10 +21,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     app = FastAPI(title="Oratio API", version=__version__, docs_url="/api/docs", redoc_url=None)
 
-    if settings.cors_origins:
+    if settings.cors_origins or settings.cors_origin_regex:
         app.add_middleware(
             CORSMiddleware,
             allow_origins=settings.cors_origins,
+            allow_origin_regex=settings.cors_origin_regex,
             allow_methods=["GET", "POST"],
             allow_headers=["content-type"],
         )

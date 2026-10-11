@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Oratio API. One container-image Lambda behind a streaming Function URL.
+
+Parameters:
+  ImageUri:
+    Type: String
+  MemorySize:
+    Type: Number
+    Default: 3008
+  CorsOriginRegex:
+    Type: String
+    Default: ^https://oratio[a-z0-9-]*\.vercel\.app$
+  EnableSpike:
+    Type: String
+    AllowedValues: ["0", "1"]
+    Default: "0"
+
+Resources:
+  Api:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageUri: !Ref ImageUri
+      Architectures: [arm64]
+      MemorySize: !Ref MemorySize
+      Timeout: 120
+      EphemeralStorage:
+        Size: 1024
+      LoggingConfig:
+        LogFormat: JSON
+      Environment:
+        Variables:
+          ORATIO_CORS_ORIGIN_REGEX: !Ref CorsOriginRegex
+          ORATIO_ENABLE_SPIKE: !Ref EnableSpike
+          ORATIO_IMAGE_DIGEST: !Select [1, !Split ["@", !Ref ImageUri]]
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  ApiLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${Api}
+      RetentionInDays: 14
+
+Outputs:
+  ApiUrl:
+    Value: !GetAtt ApiUrl.FunctionUrl
+  FunctionName:
+    Value: !Ref Api

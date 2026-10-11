@@ -12,8 +12,8 @@ class Settings(BaseSettings):
 
     model_dir: Path = Path("/opt/oratio/models")
     cors_origins: list[str] = Field(default_factory=list)
+    cors_origin_regex: str | None = None
     enable_spike: bool = False
-    bedrock_region: str = "ap-south-1"
     image_digest: str = "unknown"
 
 

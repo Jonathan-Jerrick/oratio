@@ -5,7 +5,8 @@ IMAGE ?= oratio-api:local
 PLATFORM ?= linux/arm64
 MAX_IMAGE_MB ?= 2500
 AWS_PROFILE ?= oratio
-STACK ?= oratio-spike
+STACK ?= oratio-api
+SPIKE ?= 0
 REGION ?= ap-south-1
 MEMORY ?= 3008
 AWS_ARGS = --profile $(AWS_PROFILE) --region $(REGION)
@@ -53,23 +54,22 @@ image-size: ## Fail if the image exceeds MAX_IMAGE_MB uncompressed
 image-run: ## Run the built image locally on port 8000
 	docker run --rm -p 8000:8000 -e ORATIO_ENABLE_SPIKE=1 $(IMAGE)
 
-.PHONY: spike-deploy
-spike-deploy: ## Push both architectures to ECR and deploy the B0 spike stack
+.PHONY: deploy
+deploy: ## Push the arm64 image to ECR and deploy the API stack
 	aws ecr describe-repositories --repository-names $(STACK) $(AWS_ARGS) >/dev/null 2>&1 \
 		|| aws ecr create-repository --repository-name $(STACK) $(AWS_ARGS) >/dev/null
 	aws ecr get-login-password $(AWS_ARGS) | docker login --username AWS --password-stdin $(ECR)
-	for arch in arm64 amd64; do \
-		docker buildx build --platform linux/$$arch --provenance=false --push \
-			-f services/api/Dockerfile -t $(ECR)/$(STACK):$$arch . || exit 1; \
-	done
-	aws cloudformation deploy --template-file infra/spike.yaml --stack-name $(STACK) $(AWS_ARGS) \
+	docker buildx build --platform linux/arm64 --provenance=false --push \
+		-f services/api/Dockerfile -t $(ECR)/$(STACK):latest .
+	aws cloudformation deploy --template-file infra/template.yaml --stack-name $(STACK) $(AWS_ARGS) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND --no-fail-on-empty-changeset \
-		--parameter-overrides MemorySize=$(MEMORY) \
-			ArmImageUri=$(ECR)/$(STACK)@$$(docker buildx imagetools inspect $(ECR)/$(STACK):arm64 --format '{{.Manifest.Digest}}') \
-			X86ImageUri=$(ECR)/$(STACK)@$$(docker buildx imagetools inspect $(ECR)/$(STACK):amd64 --format '{{.Manifest.Digest}}')
+		--parameter-overrides MemorySize=$(MEMORY) EnableSpike=$(SPIKE) \
+			ImageUri=$(ECR)/$(STACK)@$$(docker buildx imagetools inspect $(ECR)/$(STACK):latest --format '{{.Manifest.Digest}}')
+	aws cloudformation describe-stacks --stack-name $(STACK) $(AWS_ARGS) \
+		--query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' --output text
 
-.PHONY: spike-delete
-spike-delete: ## Remove the B0 spike stack
+.PHONY: destroy
+destroy: ## Remove the API stack and its ECR repository
 	aws cloudformation delete-stack --stack-name $(STACK) $(AWS_ARGS)
 	aws cloudformation wait stack-delete-complete --stack-name $(STACK) $(AWS_ARGS)
 	aws ecr delete-repository --repository-name $(STACK) --force $(AWS_ARGS) >/dev/null
