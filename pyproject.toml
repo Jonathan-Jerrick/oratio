@@ -8,6 +8,7 @@ dependencies = ["speechgrade", "oratio-api"]
 [dependency-groups]
 dev = [
     "httpx>=0.28",
+    "hypothesis>=6.140",
     "mypy>=1.18",
     "pytest>=8.4",
     "pytest-asyncio>=1.2",
@@ -44,7 +45,7 @@ mypy_path = ["packages/speechgrade/src", "services/api/src"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-module = ["parselmouth.*", "lightgbm.*", "onnxruntime.*"]
+module = ["parselmouth.*", "lightgbm.*", "onnxruntime.*", "soundfile.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
