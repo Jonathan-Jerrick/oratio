@@ -45,12 +45,13 @@ mypy_path = ["packages/speechgrade/src", "services/api/src"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-module = ["parselmouth.*", "lightgbm.*", "onnxruntime.*", "soundfile.*"]
+module = ["parselmouth.*", "lightgbm.*", "onnxruntime.*", "scipy.*", "soundfile.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["packages/speechgrade/tests", "services/api/tests"]
 asyncio_mode = "auto"
+pythonpath = ["packages/speechgrade/tests"]
 addopts = "--import-mode=importlib --strict-markers"
 
 [tool.coverage.run]
