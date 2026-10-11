@@ -6,6 +6,10 @@ PLATFORM ?= linux/arm64
 MAX_IMAGE_MB ?= 2500
 AWS_PROFILE ?= oratio
 STACK ?= oratio-spike
+REGION ?= ap-south-1
+MEMORY ?= 3008
+AWS_ARGS = --profile $(AWS_PROFILE) --region $(REGION)
+ECR = $(shell aws sts get-caller-identity $(AWS_ARGS) --query Account --output text).dkr.ecr.$(REGION).amazonaws.com
 
 .PHONY: help
 help: ## List targets
@@ -50,14 +54,25 @@ image-run: ## Run the built image locally on port 8000
 	docker run --rm -p 8000:8000 -e ORATIO_ENABLE_SPIKE=1 $(IMAGE)
 
 .PHONY: spike-deploy
-spike-deploy: ## Build and deploy the B0 spike stack
-	sam build --template infra/spike.yaml --profile $(AWS_PROFILE)
-	sam deploy --stack-name $(STACK) --profile $(AWS_PROFILE) --region ap-south-1 \
-		--resolve-image-repos --resolve-s3 --capabilities CAPABILITY_IAM --no-confirm-changeset
+spike-deploy: ## Push both architectures to ECR and deploy the B0 spike stack
+	aws ecr describe-repositories --repository-names $(STACK) $(AWS_ARGS) >/dev/null 2>&1 \
+		|| aws ecr create-repository --repository-name $(STACK) $(AWS_ARGS) >/dev/null
+	aws ecr get-login-password $(AWS_ARGS) | docker login --username AWS --password-stdin $(ECR)
+	for arch in arm64 amd64; do \
+		docker buildx build --platform linux/$$arch --provenance=false --push \
+			-f services/api/Dockerfile -t $(ECR)/$(STACK):$$arch . || exit 1; \
+	done
+	aws cloudformation deploy --template-file infra/spike.yaml --stack-name $(STACK) $(AWS_ARGS) \
+		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND --no-fail-on-empty-changeset \
+		--parameter-overrides MemorySize=$(MEMORY) \
+			ArmImageUri=$(ECR)/$(STACK)@$$(docker buildx imagetools inspect $(ECR)/$(STACK):arm64 --format '{{.Manifest.Digest}}') \
+			X86ImageUri=$(ECR)/$(STACK)@$$(docker buildx imagetools inspect $(ECR)/$(STACK):amd64 --format '{{.Manifest.Digest}}')
 
 .PHONY: spike-delete
 spike-delete: ## Remove the B0 spike stack
-	sam delete --stack-name $(STACK) --profile $(AWS_PROFILE) --region ap-south-1 --no-prompts
+	aws cloudformation delete-stack --stack-name $(STACK) $(AWS_ARGS)
+	aws cloudformation wait stack-delete-complete --stack-name $(STACK) $(AWS_ARGS)
+	aws ecr delete-repository --repository-name $(STACK) --force $(AWS_ARGS) >/dev/null
 
 .PHONY: budget
 budget: ## Create the $$10 / $$25 cost alarms (EMAIL=you@example.com)
