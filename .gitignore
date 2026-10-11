@@ -35,7 +35,7 @@ dist/
 samconfig.local.toml
 
 # Data, audio and model weights live on Drive and the HF Hub, not in git
-data/
+/data/
 *.onnx
 *.pt
 *.safetensors

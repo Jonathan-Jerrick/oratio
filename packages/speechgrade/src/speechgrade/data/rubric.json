@@ -1,0 +1,185 @@
+{
+  "version": "0.1.0",
+  "sigma_good": {
+    "log_duration": 0.25,
+    "pause_after": 0.15,
+    "f0_range_st": 2.0,
+    "energy_mean_db": 3.0,
+    "energy_range_db": 3.0,
+    "hf_balance_db": 3.0,
+    "prominence": 0.6
+  },
+  "rules": [
+    {
+      "code": "PAC-RUSH",
+      "dimension": "pacing",
+      "feature": "log_duration",
+      "direction": -1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "PAC-DRAG",
+      "dimension": "pacing",
+      "feature": "log_duration",
+      "direction": 1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "PAU-DROP",
+      "dimension": "pausing",
+      "feature": "pause_after",
+      "direction": -1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "PAU-LONG",
+      "dimension": "pausing",
+      "feature": "pause_after",
+      "direction": 1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "INT-MONO",
+      "dimension": "intonation",
+      "feature": "f0_range_st",
+      "direction": -1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "INT-EXAG",
+      "dimension": "intonation",
+      "feature": "f0_range_st",
+      "direction": 1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "ENE-LOW",
+      "dimension": "vocal_energy",
+      "feature": "energy_mean_db",
+      "direction": -1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "ENE-SPIKE",
+      "dimension": "vocal_energy",
+      "feature": "energy_mean_db",
+      "direction": 1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "ENE-FLAT",
+      "dimension": "vocal_energy",
+      "feature": "energy_range_db",
+      "direction": -1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "EMP-DROP",
+      "dimension": "emphasis",
+      "feature": "prominence",
+      "direction": -1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "CLA-MUFF",
+      "dimension": "clarity",
+      "feature": "hf_balance_db",
+      "direction": -1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    }
+  ],
+  "events": {
+    "fillers": [
+      "UM",
+      "UH",
+      "ER",
+      "AH",
+      "UHM",
+      "HMM",
+      "ERM"
+    ],
+    "z": 3.0,
+    "z_threshold": 2.0,
+    "weight": 1.0
+  },
+  "dimensions": [
+    "pacing",
+    "pausing",
+    "intonation",
+    "vocal_energy",
+    "emphasis",
+    "fluency",
+    "clarity"
+  ],
+  "scoring": {
+    "z_cap": 4.0,
+    "duration_reference_s": 2.0,
+    "duration_weight_floor": 0.3,
+    "merge_gap_words": 1
+  },
+  "features": {
+    "log_duration": {
+      "label": "time per syllable",
+      "unit": "log s"
+    },
+    "pause_after": {
+      "label": "the pause after this phrase",
+      "unit": "s"
+    },
+    "f0_range_st": {
+      "label": "pitch range",
+      "unit": "st"
+    },
+    "energy_mean_db": {
+      "label": "loudness",
+      "unit": "dB"
+    },
+    "energy_range_db": {
+      "label": "loudness range",
+      "unit": "dB"
+    },
+    "hf_balance_db": {
+      "label": "high-to-low frequency balance",
+      "unit": "dB"
+    },
+    "prominence": {
+      "label": "word prominence",
+      "unit": "z"
+    }
+  },
+  "rationales": {
+    "measured": "Across {seconds:.1f} s ('{words}'), {label} measured {participant:.2f} {unit} against {baseline:.2f} {unit} in the baseline, {z:.1f} standard deviations {side} the variation among strong speakers.",
+    "FLU-FILL": "A filler ('{words}') appears at {start:.1f} s; the baseline has none here.",
+    "FLU-REP": "'{words}' is repeated at {start:.1f} s; the baseline says it once.",
+    "FLU-FALSE": "'{words}' at {start:.1f} s is not in the baseline text.",
+    "FLU-OMIT": "The baseline words '{words}' are missing at {start:.1f} s."
+  },
+  "fixes": {
+    "PAC-RUSH": "Slow down here; give each syllable its full length.",
+    "PAC-DRAG": "Pick up the pace here; the phrase is stretched.",
+    "PAU-DROP": "Restore the pause after '{last_word}'.",
+    "PAU-LONG": "Shorten the pause after '{last_word}'.",
+    "INT-MONO": "Vary your pitch across this phrase; let it rise toward the key word and fall at the end.",
+    "INT-EXAG": "Narrow the pitch swings here; they overshoot the baseline.",
+    "ENE-LOW": "Project more on this phrase; it drops below your own level.",
+    "ENE-SPIKE": "Ease off here; this phrase jumps above your own level.",
+    "ENE-FLAT": "Add loudness contrast inside this phrase.",
+    "EMP-DROP": "Stress '{first_word}' with more pitch, loudness and length.",
+    "CLA-MUFF": "Articulate consonants more crisply here.",
+    "FLU-FILL": "Replace the filler '{first_word}' with a silent pause.",
+    "FLU-REP": "Say '{first_word}' once.",
+    "FLU-FALSE": "Remove the extra '{first_word}'.",
+    "FLU-OMIT": "Include the missing words: '{words}'."
+  }
+}
