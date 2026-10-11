@@ -1,0 +1,61 @@
+[project]
+name = "oratio"
+version = "0.0.0"
+description = "Workspace root for Oratio. Not published."
+requires-python = ">=3.12,<3.13"
+dependencies = ["speechgrade", "oratio-api"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28",
+    "mypy>=1.18",
+    "pytest>=8.4",
+    "pytest-asyncio>=1.2",
+    "pytest-cov>=7.0",
+    "ruff>=0.14",
+]
+
+[tool.uv]
+package = false
+exclude-newer = "7 days"
+
+[tool.uv.workspace]
+members = ["packages/speechgrade", "services/api"]
+
+[tool.uv.sources]
+speechgrade = { workspace = true }
+oratio-api = { workspace = true }
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["packages/speechgrade/src", "services/api/src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "S", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = ["packages/speechgrade/src", "services/api/src"]
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = ["parselmouth.*", "lightgbm.*", "onnxruntime.*", "boto3.*", "botocore.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["packages/speechgrade/tests", "services/api/tests"]
+asyncio_mode = "auto"
+addopts = "--import-mode=importlib --strict-markers"
+
+[tool.coverage.run]
+branch = true
+source = ["speechgrade", "oratio_api"]
+omit = ["*/oratio_api/spike/*"]
+
+[tool.coverage.report]
+show_missing = true

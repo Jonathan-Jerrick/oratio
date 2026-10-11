@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Oratio B0 architecture spike. Temporary; delete with `make spike-delete`.
+
+Parameters:
+  MemorySize:
+    Type: Number
+    Default: 3008
+
+Globals:
+  Function:
+    Timeout: 120
+    MemorySize: !Ref MemorySize
+    EphemeralStorage:
+      Size: 1024
+    LoggingConfig:
+      LogFormat: JSON
+    Environment:
+      Variables:
+        ORATIO_ENABLE_SPIKE: "1"
+        ORATIO_BEDROCK_REGION: !Ref AWS::Region
+
+Resources:
+  SpikeArm:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: services/api/Dockerfile
+      DockerContext: ..
+      DockerTag: spike-arm64
+    Properties:
+      PackageType: Image
+      Architectures: [arm64]
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource: "*"
+
+  SpikeX86:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: services/api/Dockerfile
+      DockerContext: ..
+      DockerTag: spike-x86_64
+    Properties:
+      PackageType: Image
+      Architectures: [x86_64]
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  SpikeArmLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${SpikeArm}
+      RetentionInDays: 7
+
+  SpikeX86Logs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${SpikeX86}
+      RetentionInDays: 7
+
+Outputs:
+  ArmUrl:
+    Value: !GetAtt SpikeArmUrl.FunctionUrl
+  X86Url:
+    Value: !GetAtt SpikeX86Url.FunctionUrl
+  ArmName:
+    Value: !Ref SpikeArm
+  X86Name:
+    Value: !Ref SpikeX86

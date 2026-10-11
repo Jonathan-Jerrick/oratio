@@ -1,0 +1,10 @@
+**
+!pyproject.toml
+!uv.lock
+!artifacts.lock.json
+!packages/speechgrade/pyproject.toml
+!packages/speechgrade/src/**
+!services/api/pyproject.toml
+!services/api/src/**
+**/__pycache__
+**/*.pyc

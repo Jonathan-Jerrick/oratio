@@ -1,0 +1,62 @@
+{
+  "Budget": {
+    "BudgetName": "oratio-monthly",
+    "BudgetLimit": {
+      "Amount": "25",
+      "Unit": "USD"
+    },
+    "TimeUnit": "MONTHLY",
+    "BudgetType": "COST",
+    "CostTypes": {
+      "IncludeCredit": false,
+      "IncludeRefund": false,
+      "IncludeTax": true,
+      "IncludeSubscription": true,
+      "UseBlended": false
+    }
+  },
+  "NotificationsWithSubscribers": [
+    {
+      "Notification": {
+        "NotificationType": "ACTUAL",
+        "ComparisonOperator": "GREATER_THAN",
+        "Threshold": 10,
+        "ThresholdType": "ABSOLUTE_VALUE"
+      },
+      "Subscribers": [
+        {
+          "SubscriptionType": "EMAIL",
+          "Address": "BUDGET_EMAIL"
+        }
+      ]
+    },
+    {
+      "Notification": {
+        "NotificationType": "ACTUAL",
+        "ComparisonOperator": "GREATER_THAN",
+        "Threshold": 25,
+        "ThresholdType": "ABSOLUTE_VALUE"
+      },
+      "Subscribers": [
+        {
+          "SubscriptionType": "EMAIL",
+          "Address": "BUDGET_EMAIL"
+        }
+      ]
+    },
+    {
+      "Notification": {
+        "NotificationType": "FORECASTED",
+        "ComparisonOperator": "GREATER_THAN",
+        "Threshold": 25,
+        "ThresholdType": "ABSOLUTE_VALUE"
+      },
+      "Subscribers": [
+        {
+          "SubscriptionType": "EMAIL",
+          "Address": "BUDGET_EMAIL"
+        }
+      ]
+    }
+  ]
+}

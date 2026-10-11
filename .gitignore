@@ -1,0 +1,58 @@
+# Secrets: never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Node / web
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+.vercel
+
+# AWS SAM
+.aws-sam/
+samconfig.local.toml
+
+# Data, audio and model weights live on Drive and the HF Hub, not in git
+data/
+*.onnx
+*.pt
+*.safetensors
+*.ckpt
+*.parquet
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.ogg
+*.webm
+*.sph
+!samples/**/*.wav
+!tests/fixtures/**/*.wav
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
