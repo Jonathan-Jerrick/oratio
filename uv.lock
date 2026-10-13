@@ -764,6 +764,8 @@ source = { editable = "dataset_factory" }
 dependencies = [
     { name = "httpx" },
     { name = "numpy" },
+    { name = "praat-parselmouth" },
+    { name = "scipy" },
     { name = "speechgrade" },
 ]
 
@@ -779,6 +781,8 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28" },
     { name = "huggingface-hub", marker = "extra == 'colab'", specifier = ">=0.25" },
     { name = "numpy", specifier = ">=2.1" },
+    { name = "praat-parselmouth", specifier = ">=0.4.6" },
+    { name = "scipy", specifier = ">=1.16" },
     { name = "speechgrade", editable = "packages/speechgrade" },
 ]
 provides-extras = ["colab"]
