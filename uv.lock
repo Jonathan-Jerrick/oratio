@@ -765,6 +765,7 @@ dependencies = [
     { name = "httpx" },
     { name = "numpy" },
     { name = "praat-parselmouth" },
+    { name = "pydantic" },
     { name = "scipy" },
     { name = "speechgrade" },
 ]
@@ -782,6 +783,7 @@ requires-dist = [
     { name = "huggingface-hub", marker = "extra == 'colab'", specifier = ">=0.25" },
     { name = "numpy", specifier = ">=2.1" },
     { name = "praat-parselmouth", specifier = ">=0.4.6" },
+    { name = "pydantic", specifier = ">=2.11" },
     { name = "scipy", specifier = ">=1.16" },
     { name = "speechgrade", editable = "packages/speechgrade" },
 ]

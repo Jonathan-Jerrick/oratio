@@ -1,0 +1,28 @@
+{
+  "version": "0.1.0",
+  "levels": {
+    "L1": {"regions": [1, 1], "magnitude": [0.15, 0.30], "coverage": 0.03, "global_flaw": false},
+    "L2": {"regions": [2, 2], "magnitude": [0.25, 0.45], "coverage": 0.08, "global_flaw": false},
+    "L3": {"regions": [3, 4], "magnitude": [0.40, 0.65], "coverage": 0.15, "global_flaw": false},
+    "L4": {"regions": [5, 7], "magnitude": [0.60, 0.85], "coverage": 0.30, "global_flaw": false},
+    "L5": {"regions": [8, 10], "magnitude": [0.80, 1.00], "coverage": 0.50, "global_flaw": true}
+  },
+  "span_kinds": {
+    "phrase": ["PAC-RUSH", "PAC-DRAG", "PAC-ERR", "INT-MONO", "INT-EXAG", "ENE-LOW", "ENE-SPIKE", "ENE-TRAIL", "ENE-FLAT", "CLA-MUFF"],
+    "word": ["INT-UP", "EMP-DROP", "EMP-MISP", "FLU-REP", "FLU-FALSE", "FLU-PROL", "FLU-OMIT", "FLU-FILL", "CLA-SWAL", "VQ-FRY"],
+    "pause": ["PAU-DROP", "PAU-LONG"],
+    "no_pause": ["PAU-MID"]
+  },
+  "global_codes": ["INT-MONO", "ENE-FLAT", "CLA-MUFF"],
+  "phrase_words": [2, 6],
+  "pause_min_s": 0.2,
+  "no_pause_max_s": 0.12,
+  "min_word_s": 0.12,
+  "sweep_magnitudes": [0.2, 0.4, 0.6, 0.8, 1.0],
+  "gates": {
+    "max_clipped_share": 0.001,
+    "clip_level": 0.999,
+    "max_digital_silence_s": 0.02,
+    "duration_tolerance_s": 0.01
+  }
+}
