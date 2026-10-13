@@ -28,12 +28,13 @@ WORKDIR /src
 COPY pyproject.toml uv.lock ./
 COPY packages/speechgrade/pyproject.toml packages/speechgrade/
 COPY services/api/pyproject.toml services/api/
+COPY dataset_factory/pyproject.toml dataset_factory/
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-workspace
+    uv sync --frozen --no-dev --package oratio-api --no-install-workspace
 COPY packages/speechgrade/src packages/speechgrade/src
 COPY services/api/src services/api/src
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-editable
+    uv sync --frozen --no-dev --package oratio-api --no-editable
 
 FROM ${PYTHON_IMAGE} AS runtime
 RUN apt-get update \

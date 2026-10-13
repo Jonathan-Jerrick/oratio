@@ -3,7 +3,7 @@ name = "oratio"
 version = "0.0.0"
 description = "Workspace root for Oratio. Not published."
 requires-python = ">=3.12,<3.13"
-dependencies = ["speechgrade", "oratio-api"]
+dependencies = ["speechgrade", "oratio-api", "oratio-data"]
 
 [dependency-groups]
 dev = [
@@ -21,16 +21,17 @@ package = false
 exclude-newer = "7 days"
 
 [tool.uv.workspace]
-members = ["packages/speechgrade", "services/api"]
+members = ["packages/speechgrade", "services/api", "dataset_factory"]
 
 [tool.uv.sources]
 speechgrade = { workspace = true }
 oratio-api = { workspace = true }
+oratio-data = { workspace = true }
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["packages/speechgrade/src", "services/api/src"]
+src = ["packages/speechgrade/src", "services/api/src", "dataset_factory/src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "S", "RUF"]
@@ -41,23 +42,23 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "S", "RUF"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
-mypy_path = ["packages/speechgrade/src", "services/api/src"]
+mypy_path = ["packages/speechgrade/src", "services/api/src", "dataset_factory/src"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-module = ["parselmouth.*", "lightgbm.*", "onnxruntime.*", "scipy.*", "soundfile.*"]
+module = ["parselmouth.*", "lightgbm.*", "onnxruntime.*", "scipy.*", "soundfile.*", "huggingface_hub.*", "datasets.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["packages/speechgrade/tests", "services/api/tests"]
+testpaths = ["packages/speechgrade/tests", "services/api/tests", "dataset_factory/tests"]
 asyncio_mode = "auto"
 pythonpath = ["packages/speechgrade/tests"]
 addopts = "--import-mode=importlib --strict-markers"
 
 [tool.coverage.run]
 branch = true
-source = ["speechgrade", "oratio_api"]
-omit = ["*/oratio_api/spike/*"]
+source = ["speechgrade", "oratio_api", "oratio_data"]
+omit = ["*/oratio_api/spike/*", "*/oratio_data/sources_hub.py"]
 
 [tool.coverage.report]
 show_missing = true

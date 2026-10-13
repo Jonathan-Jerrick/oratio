@@ -27,7 +27,7 @@ lint: ## Ruff lint and format check
 
 .PHONY: typecheck
 typecheck: ## mypy --strict on the library and the API
-	mypy packages/speechgrade/src services/api/src
+	mypy packages/speechgrade/src services/api/src dataset_factory/src
 
 .PHONY: test
 test: ## Unit tests with coverage

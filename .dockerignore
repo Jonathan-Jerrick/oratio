@@ -5,6 +5,7 @@
 !packages/speechgrade/pyproject.toml
 !packages/speechgrade/src/**
 !services/api/pyproject.toml
+!dataset_factory/pyproject.toml
 !services/api/src/**
 **/__pycache__
 **/*.pyc
