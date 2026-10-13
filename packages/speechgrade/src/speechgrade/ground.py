@@ -45,11 +45,13 @@ def _rule_findings(
     z_scores: dict[int, dict[str, float]],
     rubric: Rubric,
 ) -> list[_Finding]:
-    flagged = sorted(
-        index
-        for index, z in z_scores.items()
-        if rule.direction * z[rule.feature] > rule.z_threshold
-    )
+    def applies(index: int) -> bool:
+        reference = baseline_features[baseline_of[index]][rule.feature]
+        above = rule.baseline_min is None or reference >= rule.baseline_min
+        below = rule.baseline_max is None or reference < rule.baseline_max
+        return above and below and rule.direction * z_scores[index][rule.feature] > rule.z_threshold
+
+    flagged = sorted(index for index in z_scores if applies(index))
     info = rubric.features[rule.feature]
     findings: list[_Finding] = []
     for run in _runs(flagged, rubric.scoring.merge_gap_words + 1):
@@ -132,6 +134,21 @@ def _event_findings(
     return findings
 
 
+def _suppress(findings: list[_Finding], rubric: Rubric) -> list[_Finding]:
+    """Drop a finding that a more specific rule already explains over the same span."""
+    weaker = {rule.code: set(rule.suppresses) for rule in rubric.rules if rule.suppresses}
+    return [
+        item
+        for item in findings
+        if not any(
+            item.code in weaker.get(other.code, ())
+            and other.start <= item.start
+            and item.end <= other.end
+            for other in findings
+        )
+    ]
+
+
 def _explain(finding: _Finding, rubric: Rubric) -> tuple[str, str]:
     text = " ".join(finding.words).lower()
     fields = {
@@ -176,6 +193,7 @@ def find_regions(
         findings.extend(
             _rule_findings(rule, words, features, baseline_features, baseline_of, z_scores, rubric)
         )
+    findings = _suppress(findings, rubric)
     findings.sort(key=lambda item: (item.start, item.end, item.code))
 
     regions: list[Region] = []

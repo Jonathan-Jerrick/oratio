@@ -20,6 +20,9 @@ class Rule(_Frozen):
     direction: Literal[-1, 1]
     z_threshold: float
     weight: float
+    baseline_min: float | None = None
+    baseline_max: float | None = None
+    suppresses: tuple[str, ...] = ()
 
 
 class Events(_Frozen):

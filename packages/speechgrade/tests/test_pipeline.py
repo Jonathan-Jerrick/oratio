@@ -78,21 +78,89 @@ def test_rushed_words_are_grounded_as_fast_pacing() -> None:
     assert report.scores.dimensions["pacing"] < 10.0
 
 
-def test_dropped_and_overlong_pauses_are_both_detected() -> None:
+def test_dropped_overlong_and_misplaced_pauses_are_told_apart() -> None:
     dropped = _report(edit(passage(), range(4, 5), pause=0.02))
-    stretched = _report(edit(passage(), range(1, 2), pause=1.2))
+    stretched = _report(edit(passage(), range(4, 5), pause=1.4))
+    misplaced = _report(edit(passage(), range(1, 2), pause=1.2))
 
     assert next(r for r in dropped.regions if r.code == "PAU-DROP").words == "price"
-    long_pause = next(r for r in stretched.regions if r.code == "PAU-LONG")
-    assert long_pause.words == "shall"
-    assert long_pause.end == pytest.approx(stretched.words[2].start)
+    assert next(r for r in stretched.regions if r.code == "PAU-LONG").words == "price"
+    assert "PAU-MID" not in _codes(stretched)
+    mid = next(r for r in misplaced.regions if r.code == "PAU-MID")
+    assert mid.words == "shall"
+    assert mid.end == pytest.approx(misplaced.words[2].start)
+    assert "PAU-LONG" not in _codes(misplaced)
 
 
-def test_muffled_voice_is_grounded_as_a_clarity_flaw() -> None:
-    report = _report(edit(passage(), range(0, 12), brightness=3.0))
+def test_muffled_phrase_is_grounded_as_a_clarity_flaw() -> None:
+    report = _report(edit(passage(), range(3, 6), brightness=3.0))
+    region = next(r for r in report.regions if r.code == "CLA-MUFF")
 
-    assert "CLA-MUFF" in _codes(report)
+    assert region.words == "any price bear"
     assert report.scores.dimensions["clarity"] < 10.0
+
+
+def test_a_uniformly_duller_voice_or_microphone_is_not_a_flaw() -> None:
+    report = _report(edit(passage(), range(0, 12), brightness=1.6))
+
+    assert "CLA-MUFF" not in _codes(report)
+
+
+def test_rising_pitch_on_a_word_is_grounded_as_uptalk() -> None:
+    words = passage()
+    report = _report(edit(words, range(7, 8), f0_end=words[7].f0 * 1.5))
+
+    assert next(r for r in report.regions if r.code == "INT-UP").words == "burden"
+
+
+def test_fading_loudness_is_grounded_as_trailing_energy() -> None:
+    words = passage()
+    fading = [
+        Word(w.text, w.seconds, w.f0, w.level * (0.25 if 2 <= i < 5 else 1.0) ** (i - 1), w.pause)
+        for i, w in enumerate(words)
+    ]
+    report = _report(fading)
+
+    assert "ENE-TRAIL" in _codes(report)
+
+
+def test_stress_on_the_wrong_word_is_grounded_as_misplaced_emphasis() -> None:
+    words = passage()
+    report = _report(edit(words, range(5, 6), f0=230.0, level=0.5, seconds=0.6))
+
+    assert "bear" in next(r for r in report.regions if r.code == "EMP-MISP").words
+
+
+def test_a_stretched_word_is_a_prolongation_not_slow_pacing() -> None:
+    report = _report(edit(passage(), range(6, 7), seconds=1.4))
+    region = next(r for r in report.regions if r.code == "FLU-PROL")
+
+    assert region.words == "any"
+    assert not [r for r in report.regions if r.code == "PAC-DRAG" and r.words == "any"]
+    assert report.scores.dimensions["fluency"] < 10.0
+
+
+def test_uneven_syllable_timing_is_grounded_as_erratic_pacing() -> None:
+    lengths = {2: 0.12, 3: 0.75, 4: 0.12, 5: 0.75, 6: 0.12}
+    words = [
+        Word(w.text, lengths.get(i, w.seconds), w.f0, w.level, w.pause)
+        for i, w in enumerate(passage())
+    ]
+
+    assert "PAC-ERR" in _codes(_report(words))
+
+
+def test_a_swallowed_syllable_is_grounded_as_a_clarity_flaw() -> None:
+    baseline = edit(passage(), range(7, 8), nuclei=2, seconds=0.5)
+    report = _report(edit(passage(), range(7, 8), seconds=0.5), baseline=baseline)
+
+    assert next(r for r in report.regions if r.code == "CLA-SWAL").words == "burden"
+
+
+def test_creaky_voice_is_grounded_as_vocal_fry() -> None:
+    report = _report(edit(passage(), range(11, 12), f0=72.0))
+
+    assert next(r for r in report.regions if r.code == "VQ-FRY").words == "today"
 
 
 def test_fillers_repetitions_and_omissions_are_fluency_events() -> None:

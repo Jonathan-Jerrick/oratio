@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "sigma_good": {
     "log_duration": 0.25,
     "pause_after": 0.15,
@@ -7,54 +7,52 @@
     "energy_mean_db": 3.0,
     "energy_range_db": 3.0,
     "hf_balance_db": 3.0,
-    "prominence": 0.6
+    "prominence": 0.6,
+    "f0_slope_st": 2.0,
+    "energy_trend_db": 3.0,
+    "rate_variability": 0.15,
+    "relative_length": 0.25,
+    "nuclei_per_syllable": 0.2,
+    "fry_fraction": 0.15
   },
   "rules": [
     {
-      "code": "PAC-RUSH",
-      "dimension": "pacing",
-      "feature": "log_duration",
+      "code": "CLA-MUFF",
+      "dimension": "clarity",
+      "feature": "hf_balance_db",
       "direction": -1,
       "z_threshold": 2.0,
       "weight": 1.0
     },
     {
-      "code": "PAC-DRAG",
-      "dimension": "pacing",
-      "feature": "log_duration",
-      "direction": 1,
-      "z_threshold": 2.0,
-      "weight": 1.0
-    },
-    {
-      "code": "PAU-DROP",
-      "dimension": "pausing",
-      "feature": "pause_after",
+      "code": "CLA-SWAL",
+      "dimension": "clarity",
+      "feature": "nuclei_per_syllable",
       "direction": -1,
       "z_threshold": 2.0,
       "weight": 1.0
     },
     {
-      "code": "PAU-LONG",
-      "dimension": "pausing",
-      "feature": "pause_after",
-      "direction": 1,
-      "z_threshold": 2.0,
-      "weight": 1.0
-    },
-    {
-      "code": "INT-MONO",
-      "dimension": "intonation",
-      "feature": "f0_range_st",
+      "code": "EMP-DROP",
+      "dimension": "emphasis",
+      "feature": "prominence",
       "direction": -1,
       "z_threshold": 2.0,
       "weight": 1.0
     },
     {
-      "code": "INT-EXAG",
-      "dimension": "intonation",
-      "feature": "f0_range_st",
+      "code": "EMP-MISP",
+      "dimension": "emphasis",
+      "feature": "prominence",
       "direction": 1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "ENE-FLAT",
+      "dimension": "vocal_energy",
+      "feature": "energy_range_db",
+      "direction": -1,
       "z_threshold": 2.0,
       "weight": 1.0
     },
@@ -75,26 +73,104 @@
       "weight": 1.0
     },
     {
-      "code": "ENE-FLAT",
+      "code": "ENE-TRAIL",
       "dimension": "vocal_energy",
-      "feature": "energy_range_db",
+      "feature": "energy_trend_db",
       "direction": -1,
       "z_threshold": 2.0,
       "weight": 1.0
     },
     {
-      "code": "EMP-DROP",
-      "dimension": "emphasis",
-      "feature": "prominence",
+      "code": "FLU-PROL",
+      "dimension": "fluency",
+      "feature": "relative_length",
+      "direction": 1,
+      "z_threshold": 3.0,
+      "weight": 1.0,
+      "suppresses": [
+        "PAC-DRAG",
+        "PAC-ERR"
+      ]
+    },
+    {
+      "code": "INT-EXAG",
+      "dimension": "intonation",
+      "feature": "f0_range_st",
+      "direction": 1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "INT-MONO",
+      "dimension": "intonation",
+      "feature": "f0_range_st",
       "direction": -1,
       "z_threshold": 2.0,
       "weight": 1.0
     },
     {
-      "code": "CLA-MUFF",
+      "code": "INT-UP",
+      "dimension": "intonation",
+      "feature": "f0_slope_st",
+      "direction": 1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "PAC-DRAG",
+      "dimension": "pacing",
+      "feature": "log_duration",
+      "direction": 1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "PAC-ERR",
+      "dimension": "pacing",
+      "feature": "rate_variability",
+      "direction": 1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "PAC-RUSH",
+      "dimension": "pacing",
+      "feature": "log_duration",
+      "direction": -1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "PAU-DROP",
+      "dimension": "pausing",
+      "feature": "pause_after",
+      "direction": -1,
+      "z_threshold": 2.0,
+      "weight": 1.0
+    },
+    {
+      "code": "PAU-LONG",
+      "dimension": "pausing",
+      "feature": "pause_after",
+      "direction": 1,
+      "z_threshold": 2.0,
+      "weight": 1.0,
+      "baseline_min": 0.15
+    },
+    {
+      "code": "PAU-MID",
+      "dimension": "pausing",
+      "feature": "pause_after",
+      "direction": 1,
+      "z_threshold": 2.0,
+      "weight": 1.0,
+      "baseline_max": 0.15
+    },
+    {
+      "code": "VQ-FRY",
       "dimension": "clarity",
-      "feature": "hf_balance_db",
-      "direction": -1,
+      "feature": "fry_fraction",
+      "direction": 1,
       "z_threshold": 2.0,
       "weight": 1.0
     }
@@ -156,6 +232,30 @@
     "prominence": {
       "label": "word prominence",
       "unit": "z"
+    },
+    "f0_slope_st": {
+      "label": "pitch movement across the word",
+      "unit": "st"
+    },
+    "energy_trend_db": {
+      "label": "loudness drift across the phrase",
+      "unit": "dB"
+    },
+    "rate_variability": {
+      "label": "unevenness of syllable timing",
+      "unit": "log s"
+    },
+    "relative_length": {
+      "label": "length relative to neighbouring words",
+      "unit": "log s"
+    },
+    "nuclei_per_syllable": {
+      "label": "audible syllables per expected syllable",
+      "unit": "ratio"
+    },
+    "fry_fraction": {
+      "label": "share of the word in creaky voice",
+      "unit": "ratio"
     }
   },
   "rationales": {
@@ -180,6 +280,14 @@
     "FLU-FILL": "Replace the filler '{first_word}' with a silent pause.",
     "FLU-REP": "Say '{first_word}' once.",
     "FLU-FALSE": "Remove the extra '{first_word}'.",
-    "FLU-OMIT": "Include the missing words: '{words}'."
+    "FLU-OMIT": "Include the missing words: '{words}'.",
+    "PAU-MID": "Carry the phrase through; do not stop after '{last_word}'.",
+    "PAC-ERR": "Even out the rhythm here; the syllable timing is uneven.",
+    "INT-UP": "Let the pitch fall on '{last_word}' instead of rising.",
+    "ENE-TRAIL": "Keep your loudness up to the end of this phrase.",
+    "EMP-MISP": "Take the stress off '{first_word}'; the baseline does not emphasise it.",
+    "FLU-PROL": "Do not stretch '{first_word}'; say it at its normal length.",
+    "CLA-SWAL": "Pronounce every syllable of '{words}'.",
+    "VQ-FRY": "Support the voice with more breath here; it drops into a creak."
   }
 }

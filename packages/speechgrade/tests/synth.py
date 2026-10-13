@@ -20,16 +20,22 @@ class Word:
     level: float = 0.3
     pause: float = 0.08
     brightness: float = 1.0
+    f0_end: float | None = None
+    nuclei: int = 1
 
 
 def _voiced(word: Word) -> np.ndarray:
     n = int(word.seconds * SAMPLE_RATE)
     t = np.arange(n) / SAMPLE_RATE
-    harmonics = sum(np.sin(2 * np.pi * k * word.f0 * t) / k**word.brightness for k in range(1, 20))
+    f0 = np.linspace(word.f0, word.f0_end or word.f0, n)
+    phase = 2 * np.pi * np.cumsum(f0) / SAMPLE_RATE
+    harmonics = sum(np.sin(k * phase) / k**word.brightness for k in range(1, 20))
     fade = int(FADE_SECONDS * SAMPLE_RATE)
     envelope = np.ones(n)
     envelope[:fade] = np.linspace(0.0, 1.0, fade)
     envelope[-fade:] = np.linspace(1.0, 0.0, fade)
+    if word.nuclei > 1:
+        envelope = envelope * (0.1 + 0.9 * np.abs(np.sin(np.pi * word.nuclei * t / word.seconds)))
     return word.level * envelope * harmonics / np.max(np.abs(harmonics))
 
 

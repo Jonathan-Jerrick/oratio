@@ -14,9 +14,9 @@ FIXTURES: dict[str, list[Word]] = {
     ],
 }
 GOLDEN = {
-    "clean": "1cef6e0905d142a62bd6ee8e923459531f97619dfcf904e7755d14bdb2e739b8",
-    "quiet_phrase": "7054ac30a104fa18940c4d6c7632d862919e1c3139bb0b859323cc557b1a52e9",
-    "rushed_and_flat": "6d7e8fafbf8ab5a22d77c7ab46866198096eafc5f16a54c3f53625350d6cb6dd",
+    "clean": "d2199f907084274f9ae3045cdcc120f31074267e83053d568a32727d120ba357",
+    "quiet_phrase": "07758040fa0dac4ab7e7a8d60d423e97210a45b8d81afb72116d90628ae52701",
+    "rushed_and_flat": "eba41a73516c8bbd94f0ed7226f9319fe3b490a461ee2f52c244587e5f3d72ac",
 }
 
 
