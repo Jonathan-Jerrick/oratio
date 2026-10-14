@@ -4,16 +4,34 @@ Oratio scores how a speech is delivered. It compares a recording against a stron
 
 Built for Track C of the Multimodal AI Hackathon 2026: Contrastive Speech Analytics and Temporal Flaw Grounding.
 
-**Status:** under construction. The repository currently holds the project skeleton, the pinned-model build, and the deployment spike. Links to the live demo, the dataset and the models will appear here when they exist.
+**Live demo:** [oratio-steel.vercel.app](https://oratio-steel.vercel.app)
+
+- **Explore.** Open an analyzed Gettysburg Address reading and see each injected flaw beside what Oratio detected.
+- **Analyze.** Upload or record your own reading.
+- **Method and data.** [How it works](docs/methodology.md) and the [dataset datasheet](docs/datasheet.md).
 
 ## Layout
 
 | Path | Contents |
 |---|---|
+| `apps/web` | Dashboard: Vite, React 19, TypeScript, Tailwind. Deployed on Vercel. |
 | `packages/speechgrade` | Core library: alignment, features, grounding, scoring. No PyTorch. |
 | `services/api` | FastAPI service, shipped as one container image on AWS Lambda. |
+| `dataset_factory` | Builds OCDD: source acquisition, flaw planning and injection, gates, training and evaluation. |
+| `notebooks` | NB01 to NB03, run on Colab: baselines, dataset generation, detector training and publishing. |
 | `infra` | AWS SAM templates and the cost budget. |
+| `docs` | Methodology and dataset datasheet. |
 | `artifacts.lock.json` | Every served model file, pinned by Hugging Face revision and SHA-256. |
+
+## How it works
+
+1. Both recordings are aligned to their words, and the words are paired by text.
+2. Pitch, loudness, brightness, clarity, timing and pauses are measured for every word.
+3. Each participant word is compared with its baseline word, in units of how much good readers vary on that feature.
+4. Words that pass a rubric threshold are merged into time regions. Each region gets a code, the measurement behind it and a fix.
+5. Every point lost traces back to one of those regions.
+
+The full method is in [docs/methodology.md](docs/methodology.md).
 
 ## Run it locally
 
@@ -23,6 +41,14 @@ You need Python 3.12, [uv](https://docs.astral.sh/uv/) and Docker.
 uv sync --frozen
 uv run make verify     # lint, type check, tests
 uv run make dev        # API on http://localhost:8000/api/health
+```
+
+Dashboard:
+
+```bash
+cd apps/web
+npm ci
+VITE_API_URL=http://localhost:8000 npm run dev
 ```
 
 Build and run the same image that Lambda runs:
