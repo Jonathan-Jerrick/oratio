@@ -47,7 +47,7 @@ mypy_path = ["packages/speechgrade/src", "services/api/src", "dataset_factory/sr
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-module = ["parselmouth.*", "lightgbm.*", "onnxruntime.*", "scipy.*", "soundfile.*", "huggingface_hub.*", "datasets.*", "faster_whisper.*", "pyloudnorm.*", "pyarrow.*", "torch.*", "transformers.*"]
+module = ["parselmouth.*", "lightgbm.*", "onnxruntime.*", "scipy.*", "soundfile.*", "huggingface_hub.*", "datasets.*", "faster_whisper.*", "pyloudnorm.*", "pyarrow.*", "torch.*", "transformers.*", "pandas.*", "sklearn.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
