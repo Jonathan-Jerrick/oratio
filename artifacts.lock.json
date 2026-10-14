@@ -1,36 +1,12 @@
 {
   "artifacts": [
     {
-      "name": "wav2vec2_base_fp32",
-      "repo_id": "Xenova/wav2vec2-base-960h",
-      "revision": "a19f851b3d42865797e410752b4c570c871e4825",
-      "filename": "onnx/model.onnx",
-      "sha256": "e46614273f03ff4b87923a965e417fa72004825522cb007c9c25633b8475490d",
-      "size": 377887594
-    },
-    {
       "name": "wav2vec2_base_int8",
       "repo_id": "Xenova/wav2vec2-base-960h",
       "revision": "a19f851b3d42865797e410752b4c570c871e4825",
       "filename": "onnx/model_quantized.onnx",
       "sha256": "cd5040c147381580ed73258143dd8e0c28e800a09e74ee42ee2b3e8cb4d760a3",
       "size": 95286046
-    },
-    {
-      "name": "wavlm_base_plus_fp32",
-      "repo_id": "Xenova/wavlm-base-plus",
-      "revision": "27b8ee283bf6c3a5ae77d7e90d8e40a6925288e2",
-      "filename": "onnx/model.onnx",
-      "sha256": "07789ad4d9e01cba75fce7fd923e7a5e9a0aaf0f43df25ba6ee6d3d6d7adaa1c",
-      "size": 377935358
-    },
-    {
-      "name": "wavlm_base_plus_int8",
-      "repo_id": "Xenova/wavlm-base-plus",
-      "revision": "27b8ee283bf6c3a5ae77d7e90d8e40a6925288e2",
-      "filename": "onnx/model_quantized.onnx",
-      "sha256": "9629e437514e16880eacc868dde9db6f319fa0864fdbb95de61fd39af3dbfe89",
-      "size": 95421869
     }
   ]
 }

@@ -44,6 +44,7 @@ RUN apt-get update \
 COPY --from=lwa /lambda-adapter /opt/extensions/lambda-adapter
 COPY --from=deps /opt/venv /opt/venv
 COPY --from=models /models /opt/oratio/models
+COPY services/api/baselines /opt/oratio/baselines
 ENV PATH=/opt/venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \

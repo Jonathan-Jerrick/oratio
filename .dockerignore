@@ -7,5 +7,6 @@
 !services/api/pyproject.toml
 !dataset_factory/pyproject.toml
 !services/api/src/**
+!services/api/baselines/**
 **/__pycache__
 **/*.pyc

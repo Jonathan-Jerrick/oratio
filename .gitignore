@@ -49,6 +49,7 @@ samconfig.local.toml
 *.webm
 *.sph
 !samples/**/*.wav
+!services/api/baselines/*.flac
 !tests/fixtures/**/*.wav
 
 # OS / editor
@@ -56,3 +57,4 @@ samconfig.local.toml
 .idea/
 .vscode/*
 !.vscode/extensions.json
+!apps/web/public/samples/*.m4a
