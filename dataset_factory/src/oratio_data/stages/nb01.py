@@ -241,18 +241,29 @@ def _cut_one(record: dict[str, Any], out: Path) -> list[dict[str, str]]:
 
 
 def cut(root: Path) -> dict[str, int]:
-    """Cut, screen and loudness-normalise passages; writes candidates.csv from scratch."""
+    """Cut, screen and loudness-normalise passages, then rebuild candidates.csv.
+
+    Each recording's rows are cached under candidates/rows, so a rerun only does new work.
+    """
     out = root / "candidates"
-    for sub in ("audio", "transcripts"):
+    for sub in ("audio", "transcripts", "rows"):
         (out / sub).mkdir(parents=True, exist_ok=True)
     rows: list[dict[str, str]] = []
     records = [json.loads(p.read_text()) for p in sorted((root / "asr").glob("*.json"))]
     best: dict[str, dict[str, Any]] = {}
     for record in sorted(records, key=lambda r: bitrate_rank(r["path"])):
         best.setdefault(recording_key(record["path"]), record)
-    for record in sorted(best.values(), key=lambda r: r["key"]):
-        if record["words"]:
-            rows.extend(_cut_one(record, out))
+    todo = sorted((r for r in best.values() if r["words"]), key=lambda r: r["key"])
+    for number, record in enumerate(todo, start=1):
+        cache = out / "rows" / f"{record['key']}.json"
+        if cache.exists():
+            found = json.loads(cache.read_text())
+        else:
+            found = _cut_one(record, out)
+            cache.write_text(json.dumps(found))
+        rows.extend(found)
+        kept = sum(not row["reasons"] for row in found)
+        print(f"{number}/{len(todo)} {record['key']}: {len(found)} cut, {kept} passed", flush=True)
     with (out / "candidates.csv").open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=CANDIDATE_FIELDS)
         writer.writeheader()
