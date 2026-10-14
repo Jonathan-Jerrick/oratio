@@ -1,0 +1,16 @@
+[
+  {
+    "id": "demo",
+    "title": "Gettysburg Address (synthetic voice demo)",
+    "speaker": "Synthetic harmonic voice",
+    "source": "demo",
+    "license": "own",
+    "level": 3,
+    "baseline_id": "demo-baseline",
+    "report": "demo.json",
+    "audio": "demo.participant.mp3",
+    "baseline_audio": "demo.baseline.mp3",
+    "overall": null,
+    "truth": "demo.labels.json"
+  }
+]
