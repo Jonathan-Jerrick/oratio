@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="ORATIO_", extra="ignore")
 
     model_dir: Path = Path("/opt/oratio/models")
+    baseline_dir: Path = Path("/opt/oratio/baselines")
+    groq_api_key: str | None = None
     cors_origins: list[str] = Field(default_factory=list)
     cors_origin_regex: str | None = None
     enable_spike: bool = False

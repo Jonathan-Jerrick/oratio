@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from oratio_api import __version__
+from oratio_api import __version__, analysis, judges
 from oratio_api.settings import Settings, get_settings
 
 
@@ -38,6 +38,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             arch=platform.machine(),
             image_digest=settings.image_digest,
         )
+
+    app.include_router(analysis.build_router(settings), prefix="/api")
+    app.include_router(judges.build_router(settings), prefix="/api")
 
     if settings.enable_spike:
         from oratio_api.spike.router import build_router

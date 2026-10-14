@@ -7,6 +7,8 @@ license = "MIT"
 dependencies = [
     "fastapi>=0.118",
     "pydantic-settings>=2.11",
+    "python-multipart>=0.0.20",
+    "httpx>=0.28",
     "speechgrade",
     "uvicorn>=0.37",
 ]
