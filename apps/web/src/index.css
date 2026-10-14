@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+@theme static {
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --color-canvas: #ffffff;
   --color-surface: #f6f7f9;
@@ -13,6 +13,9 @@
   --color-good: #1f7a4d;
   --color-warn: #b45309;
   --color-bad: #b42318;
+}
+
+:root {
   --color-dim-pacing: #3b6fe0;
   --color-dim-pausing: #0f9d8a;
   --color-dim-intonation: #8a4fd6;
