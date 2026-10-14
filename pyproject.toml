@@ -47,7 +47,7 @@ mypy_path = ["packages/speechgrade/src", "services/api/src", "dataset_factory/sr
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-module = ["parselmouth.*", "lightgbm.*", "onnxruntime.*", "scipy.*", "soundfile.*", "huggingface_hub.*", "datasets.*", "faster_whisper.*", "pyloudnorm.*", "pyarrow.*"]
+module = ["parselmouth.*", "lightgbm.*", "onnxruntime.*", "scipy.*", "soundfile.*", "huggingface_hub.*", "datasets.*", "faster_whisper.*", "pyloudnorm.*", "pyarrow.*", "torch.*", "transformers.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
@@ -59,7 +59,7 @@ addopts = "--import-mode=importlib --strict-markers"
 [tool.coverage.run]
 branch = true
 source = ["speechgrade", "oratio_api", "oratio_data"]
-omit = ["*/oratio_api/spike/*", "*/oratio_data/sources_hub.py", "*/oratio_data/asr.py", "*/oratio_data/stages/*"]
+omit = ["*/oratio_api/spike/*", "*/oratio_data/sources_hub.py", "*/oratio_data/asr.py", "*/oratio_data/ctc_gpu.py", "*/oratio_data/stages/*"]
 
 [tool.coverage.report]
 show_missing = true
