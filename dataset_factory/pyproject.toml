@@ -17,6 +17,8 @@ dependencies = [
 [project.optional-dependencies]
 colab = [
     "faster-whisper>=1.1",
+    "nvidia-cublas-cu12>=12.4",
+    "nvidia-cudnn-cu12>=9.1,<10",
     "pyloudnorm>=0.1.1",
     "datasets>=3.0",
     "huggingface-hub>=0.25",

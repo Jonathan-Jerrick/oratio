@@ -117,6 +117,7 @@ def transcribe(
 
     per_source caps how many items of each source are attempted, for smoke runs.
     """
+    asr.check()
     out = root / "asr"
     out.mkdir(parents=True, exist_ok=True)
     counts = {"done": 0, "skipped": 0, "not_english": 0, "failed": 0}

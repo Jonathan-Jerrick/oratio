@@ -1,5 +1,7 @@
 """Decoding and Whisper transcription with word timings (Colab, GPU)."""
 
+import ctypes
+import importlib
 import subprocess
 from functools import lru_cache
 from pathlib import Path
@@ -25,8 +27,39 @@ def decode(path: Path, start: float = 0.0, seconds: float | None = None) -> Samp
     return np.frombuffer(raw, dtype=np.float32).copy()
 
 
+CUDA_PACKAGES = ("nvidia.cublas.lib", "nvidia.cudnn.lib")
+CHECK_SECONDS = 1.0
+
+
+def _preload_cuda_libraries() -> None:
+    """Load the pip-installed CUDA 12 libraries CTranslate2 links against.
+
+    Colab's system CUDA can be newer than the one CTranslate2 was built for, and the loader
+    path cannot change after the process starts, so the libraries are loaded globally here.
+    """
+    pending: list[Path] = []
+    for name in CUDA_PACKAGES:
+        try:
+            package = importlib.import_module(name)
+        except ImportError:
+            continue
+        for directory in package.__path__:
+            pending.extend(sorted(Path(directory).glob("lib*.so*")))
+    for _ in range(len(pending)):
+        failed = []
+        for library in pending:
+            try:
+                ctypes.CDLL(str(library), mode=ctypes.RTLD_GLOBAL)
+            except OSError:
+                failed.append(library)
+        if len(failed) in (0, len(pending)):
+            return
+        pending = failed
+
+
 @lru_cache(maxsize=1)
 def _models() -> tuple[Any, Any]:
+    _preload_cuda_libraries()
     from faster_whisper import BatchedInferencePipeline, WhisperModel
 
     model = WhisperModel(WHISPER_MODEL, device="cuda", compute_type="float16")
@@ -49,3 +82,8 @@ def transcribe(audio: Samples) -> list[Word]:
         for segment in segments
         for w in segment.words or []
     ]
+
+
+def check() -> None:
+    """Load the model and transcribe a second of silence; raises if the GPU stack is broken."""
+    transcribe(np.zeros(round(CHECK_SECONDS * SAMPLE_RATE), dtype=np.float32))
