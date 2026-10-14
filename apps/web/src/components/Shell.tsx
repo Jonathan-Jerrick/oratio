@@ -115,7 +115,7 @@ export function PageHeader({
     <div className="flex flex-wrap items-end justify-between gap-4 px-4 pt-8 md:px-8">
       <div className="min-w-0">
         <h1 className="text-[28px] font-semibold leading-tight tracking-tight">{title}</h1>
-        {subtitle && <div className="mt-1.5 text-[15px] text-muted">{subtitle}</div>}
+        {subtitle && <div className="mt-1.5 max-w-3xl text-[15px] leading-relaxed text-muted">{subtitle}</div>}
       </div>
       {aside}
     </div>
