@@ -155,3 +155,15 @@ def test_gates_name_each_failure() -> None:
     assert check_clip(replace(clean, samples=silent), CONFIG.gates) == ["digital_silence"]
     assert check_clip(short, CONFIG.gates) == ["duration"]
     assert check_clip(bad_label, CONFIG.gates) == ["label_bounds"]
+
+
+def test_silence_already_in_the_source_is_not_held_against_the_clip() -> None:
+    samples = AUDIO.samples.copy()
+    samples[16_000:17_600] = 0.0
+    result = apply_plan(samples, [], seed=0)
+    silent = result.samples.copy()
+    silent[16_000:17_600] = 0.0
+    clip = replace(result, samples=silent)
+
+    assert check_clip(clip, CONFIG.gates) == ["digital_silence"]
+    assert check_clip(clip, CONFIG.gates, source_silence_s=0.1) == []

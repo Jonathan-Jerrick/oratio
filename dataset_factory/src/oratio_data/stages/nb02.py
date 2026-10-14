@@ -12,7 +12,7 @@ import numpy as np
 import soundfile as sf
 
 from oratio_data.config import load_config
-from oratio_data.gates import check_clip
+from oratio_data.gates import check_clip, longest_zero_run_s
 from oratio_data.injectors import PlanError, Result, apply_plan
 from oratio_data.licenses import LicenseError, require_publishable
 from oratio_data.plan import Placement, coverage, plan_level, plan_sweep
@@ -75,13 +75,23 @@ def baseline_words(transcript: dict[str, Any]) -> list[WordSpan]:
 
 
 def drift_ms(
-    encoder: CtcEncoder, result: Result, reference: list[WordSpan], kept: list[int]
+    encoder: CtcEncoder,
+    result: Result,
+    reference: list[WordSpan],
+    kept: list[int],
+    checked: list[int],
 ) -> tuple[float, float]:
-    """Re-align the generated clip and compare word starts with the warped reference timing."""
+    """Re-align the clip and compare word starts with the warped reference timing.
+
+    Only words outside every edited span are scored: they test that the warp carried the labels
+    correctly, while words inside heavy edits mostly measure the aligner's own confusion.
+    """
     expected = [reference[i] for i in kept]
     found = encoder.align(result.samples, " ".join(w.word for w in expected))
-    starts = np.array([w.start for w in found])
-    target = result.warp.apply([w.start for w in expected])
+    position = {index: n for n, index in enumerate(kept)}
+    rows = [position[i] for i in checked] or list(range(len(kept)))
+    starts = np.array([found[n].start for n in rows])
+    target = result.warp.apply([expected[n].start for n in rows])
     error = np.abs(starts - target) * 1000.0
     return float(np.median(error)), float(np.percentile(error, 95))
 
@@ -175,12 +185,15 @@ def _make_clip(
     result = apply_plan(
         samples, flaws, seed=int(hashlib.sha256(clip_id.encode()).hexdigest(), 16) % 10**8
     )
-    failures = check_clip(result, config.gates)
+    failures = check_clip(result, config.gates, longest_zero_run_s(samples))
     omitted = {i for i, w in enumerate(words) for f in flaws
                if f.code == "FLU-OMIT" and f.start <= w.start and w.end <= f.end}  # fmt: skip
     kept = [i for i in range(len(words)) if i not in omitted]
+    untouched = [
+        i for i in kept if not any(f.start < words[i].end and words[i].start < f.end for f in flaws)
+    ]
     try:
-        median, p95 = drift_ms(encoder, result, reference, kept)
+        median, p95 = drift_ms(encoder, result, reference, kept, untouched)
     except AlignmentError:
         median, p95 = float("inf"), float("inf")
     if median > MAX_DRIFT_MS:
