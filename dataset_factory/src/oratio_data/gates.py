@@ -6,6 +6,8 @@ from oratio_data.config import Gates
 from oratio_data.dsp import SAMPLE_RATE, Samples
 from oratio_data.injectors import Result
 
+MAX_STRETCH = 4.0
+
 
 def _longest_zero_run(samples: Samples) -> int:
     zero = np.concatenate(([False], samples == 0.0, [False]))
@@ -20,13 +22,15 @@ def longest_zero_run_s(samples: Samples) -> float:
 def check_clip(result: Result, gates: Gates, source_silence_s: float = 0.0) -> list[str]:
     """Names of the gates this clip fails; empty when it passes.
 
-    Digital silence already present in the source recording is not held against the clip.
+    Digital silence already present in the source recording is not held against the clip, even
+    when a duration edit stretches it (by at most MAX_STRETCH).
     """
     samples = result.samples
     failures: list[str] = []
     if np.mean(np.abs(samples) >= gates.clip_level) > gates.max_clipped_share:
         failures.append("clipping")
-    if longest_zero_run_s(samples) > max(gates.max_digital_silence_s, source_silence_s + 0.001):
+    allowed = source_silence_s * MAX_STRETCH + 0.001
+    if longest_zero_run_s(samples) > max(gates.max_digital_silence_s, allowed):
         failures.append("digital_silence")
     seconds = len(samples) / SAMPLE_RATE
     if abs(seconds - result.warp.output_duration) > gates.duration_tolerance_s:
