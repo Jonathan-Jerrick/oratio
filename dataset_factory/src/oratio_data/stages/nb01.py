@@ -5,6 +5,7 @@ import json
 import shutil
 import subprocess
 import time
+import warnings
 from collections.abc import Iterator
 from dataclasses import asdict, dataclass
 from functools import lru_cache
@@ -20,10 +21,12 @@ from oratio_data.baselines import (
     Passage,
     Word,
     assign_speakers,
-    cut_passages,
+    bitrate_rank,
+    cut_by_speaker,
     energy_snr_db,
     prepared_remarks_end,
     read_nlp,
+    recording_key,
     screen,
 )
 from oratio_data.dsp import SAMPLE_RATE
@@ -76,7 +79,10 @@ def _audio_items(root: Path, seed: int) -> Iterator[Item]:
     orations = [r for r in rows if r["source_id"] == "S-LV-ORATIONS"]
     picked = np.random.default_rng(seed).permutation(len(orations))[:ORATION_SAMPLE]
     chosen = {orations[i]["file"] for i in picked}
-    for row in rows:
+    best: dict[str, dict[str, str]] = {}
+    for row in sorted(rows, key=lambda r: bitrate_rank(r["file"])):
+        best.setdefault(recording_key(row["file"]), row)
+    for row in sorted(best.values(), key=lambda r: r["file"]):
         if row["source_id"] in ("S-PD-COMMONS", "S-LV") or row["file"] in chosen:
             key = Path(row["file"]).with_suffix("").as_posix().replace("/", "__")
             yield Item(
@@ -165,7 +171,9 @@ def _loudness_normalise(audio: np.ndarray) -> tuple[np.ndarray, float]:
 
     meter = pyloudnorm.Meter(SAMPLE_RATE)
     loudness = float(meter.integrated_loudness(audio.astype(np.float64)))
-    gained = pyloudnorm.normalize.loudness(audio.astype(np.float64), loudness, TARGET_LUFS)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Possible clipped samples")
+        gained = pyloudnorm.normalize.loudness(audio.astype(np.float64), loudness, TARGET_LUFS)
     peak = float(np.max(np.abs(gained)))
     if peak > 0.89:
         gained = gained * (0.89 / peak)
@@ -184,7 +192,7 @@ def _cut_one(record: dict[str, Any], out: Path) -> list[dict[str, str]]:
         source.parent.mkdir(parents=True, exist_ok=True)
         source.write_bytes(_shard_audio(Path(record["shard"]))[record["row"]])
     rows = []
-    passages: list[Passage] = cut_passages(words, MAX_PASSAGES[record["source_id"]])
+    passages: list[Passage] = cut_by_speaker(words, MAX_PASSAGES[record["source_id"]])
     for number, passage in enumerate(passages):
         reasons = screen(words, passage)
         audio = asr.decode(source, passage.start, passage.seconds)
@@ -238,8 +246,11 @@ def cut(root: Path) -> dict[str, int]:
     for sub in ("audio", "transcripts"):
         (out / sub).mkdir(parents=True, exist_ok=True)
     rows: list[dict[str, str]] = []
-    for path in sorted((root / "asr").glob("*.json")):
-        record = json.loads(path.read_text())
+    records = [json.loads(p.read_text()) for p in sorted((root / "asr").glob("*.json"))]
+    best: dict[str, dict[str, Any]] = {}
+    for record in sorted(records, key=lambda r: bitrate_rank(r["path"])):
+        best.setdefault(recording_key(record["path"]), record)
+    for record in sorted(best.values(), key=lambda r: r["key"]):
         if record["words"]:
             rows.extend(_cut_one(record, out))
     with (out / "candidates.csv").open("w", newline="") as handle:

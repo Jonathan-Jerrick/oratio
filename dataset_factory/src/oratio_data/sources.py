@@ -13,6 +13,7 @@ from urllib.parse import quote, unquote, urlsplit
 
 import httpx
 
+from oratio_data.baselines import bitrate_rank, recording_key
 from oratio_data.licenses import LicenseClass
 
 USER_AGENT = "OratioDatasetBuilder/0.2 (research; https://github.com/Jonathan-Jerrick/oratio)"
@@ -184,9 +185,13 @@ class Fetcher:
 
 
 def _librivox_files(metadata: dict[str, Any], prefer_64kb: bool) -> list[str]:
+    """One file per recording: the preferred bitrate where several are published."""
     names = [f["name"] for f in metadata.get("files", []) if f["name"].endswith(".mp3")]
-    chosen = [n for n in names if ("64kb" in n) == prefer_64kb]
-    return chosen or names
+    order = sorted(names, key=lambda n: (bitrate_rank(n) != 2) if prefer_64kb else bitrate_rank(n))
+    best: dict[str, str] = {}
+    for name in order:
+        best.setdefault(recording_key(name), name)
+    return sorted(best.values())
 
 
 def _acquire_librivox_item(

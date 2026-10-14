@@ -8,10 +8,13 @@ from oratio_data.baselines import (
     MIN_PASSAGE_S,
     Word,
     assign_speakers,
+    bitrate_rank,
+    cut_by_speaker,
     cut_passages,
     energy_snr_db,
     prepared_remarks_end,
     read_nlp,
+    recording_key,
     screen,
     sentence_ends,
 )
@@ -151,3 +154,34 @@ def test_speakers_follow_the_reference_transcript_across_asr_errors() -> None:
 
     assert [w.speaker for w in labelled] == ["0", "0", "0", "1", "1", "1", "1", "1"]
     assert assign_speakers(asr, [])[0].speaker == ""
+
+
+def test_passages_never_cross_a_change_of_speaker() -> None:
+    first, second = _speech(14), _speech(14)
+    offset = first[-1].end + 1.0
+    words = [Word(w.text, w.start, w.end, 0.9, "ceo") for w in first] + [
+        Word(w.text, w.start + offset, w.end + offset, 0.9, "cfo") for w in second
+    ]
+
+    passages = cut_by_speaker(words, max_passages=5)
+
+    assert len(passages) == 2
+    assert all(len({w.speaker for w in words[p.first : p.last + 1]}) == 1 for p in passages)
+    assert passages[1].first >= len(first)
+    assert all(screen(words, p) == [] for p in passages)
+    assert len(cut_by_speaker(words, max_passages=1)) == 1
+    assert len(cut_passages(words, max_passages=5)) >= 1
+
+
+@pytest.mark.parametrize(
+    ("path", "key", "rank"),
+    [
+        ("raw/lv/item/lincoln_amb.mp3", "raw/lv/item/lincoln_amb", 0),
+        ("raw/lv/item/lincoln_amb_128kb.mp3", "raw/lv/item/lincoln_amb", 1),
+        ("raw/lv/item/lincoln_amb_64kb.mp3", "raw/lv/item/lincoln_amb", 2),
+        ("raw/commons/Speech_1964.ogg", "raw/commons/Speech_1964", 0),
+    ],
+)
+def test_bitrate_variants_share_one_recording_key(path: str, key: str, rank: int) -> None:
+    assert recording_key(path) == key
+    assert bitrate_rank(path) == rank

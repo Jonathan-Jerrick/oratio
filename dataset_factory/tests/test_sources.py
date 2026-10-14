@@ -233,7 +233,12 @@ def _archive(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"response": {"docs": docs}})
     if path.startswith("/metadata/"):
         item = path.rsplit("/", 1)[-1]
-        files = [{"name": f"{item}.mp3"}, {"name": f"{item}_64kb.mp3"}, {"name": "cover.jpg"}]
+        files = [
+            {"name": f"{item}.mp3"},
+            {"name": f"{item}_128kb.mp3"},
+            {"name": f"{item}_64kb.mp3"},
+            {"name": "cover.jpg"},
+        ]
         return httpx.Response(
             200, json={"metadata": {"licenseurl": "https://pd.example"}, "files": files}
         )

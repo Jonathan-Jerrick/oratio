@@ -29,6 +29,7 @@ QA_MARKERS = (
     "q&a",
 )
 _WORD = re.compile(r"[a-z0-9']+")
+_BITRATE_SUFFIX = re.compile(r"_(?:64|128)kb$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,6 +92,33 @@ def cut_passages(words: list[Word], max_passages: int) -> list[Passage]:
             first = end + 1
         position += 1
     return passages
+
+
+def cut_by_speaker(words: list[Word], max_passages: int) -> list[Passage]:
+    """Passages that never cross a change of speaker, taken turn by turn in order."""
+    passages: list[Passage] = []
+    start = 0
+    for index in range(1, len(words) + 1):
+        if index < len(words) and words[index].speaker == words[start].speaker:
+            continue
+        for found in cut_passages(words[start:index], max_passages - len(passages)):
+            passages.append(
+                Passage(found.first + start, found.last + start, found.start, found.end)
+            )
+        start = index
+    return passages[:max_passages]
+
+
+def recording_key(path: str) -> str:
+    """The same reading published at several bitrates shares one key."""
+    stem = path.rsplit(".", 1)[0] if "." in path.rsplit("/", 1)[-1] else path
+    return _BITRATE_SUFFIX.sub("", stem)
+
+
+def bitrate_rank(path: str) -> int:
+    """Prefer the original upload, then 128 kb/s, then 64 kb/s."""
+    stem = path.rsplit(".", 1)[0]
+    return 2 if stem.endswith("_64kb") else 1 if stem.endswith("_128kb") else 0
 
 
 def energy_snr_db(samples: Samples) -> float:
