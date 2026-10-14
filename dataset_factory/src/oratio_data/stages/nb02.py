@@ -123,9 +123,15 @@ def _plans(
 
 
 def generate(
-    root: Path, runner: Callable[[np.ndarray], np.ndarray], limit: int | None = None
+    root: Path,
+    runner: Callable[[np.ndarray], np.ndarray],
+    limit: int | None = None,
+    audit_every: int = 1,
 ) -> dict[str, int]:
-    """Generate every clip for every selected baseline; resumes by skipping finished clips."""
+    """Generate every clip for every selected baseline; resumes by skipping finished clips.
+
+    audit_every=n runs the re-alignment drift gate on every n-th clip (always on controls).
+    """
     candidates = root / "candidates"
     out = root / "ocdd"
     for sub in ("labels",):
@@ -162,8 +168,14 @@ def generate(
             if label_path.exists():
                 counts["skipped"] += 1
                 continue
-            record = _make_clip(out, baseline, words, reference, encoder, samples,
-                                clip_id, kind, level, variant, code, magnitude, plan)  # fmt: skip
+            audited = (
+                kind == "control"
+                or int(hashlib.sha256(clip_id.encode()).hexdigest(), 16) % audit_every == 0
+            )
+            record = _make_clip(
+                out, baseline, words, reference, encoder, samples, clip_id, kind, level,
+                variant, code, magnitude, plan, audited,
+            )  # fmt: skip
             if record is None:
                 counts["gate_failed"] += 1
                 continue
@@ -178,7 +190,7 @@ def generate(
 def _make_clip(
     out: Path, baseline: dict[str, str], words: list[WordSpan], reference: list[WordSpan],
     encoder: CtcEncoder, samples: np.ndarray, clip_id: str, kind: str, level: int,
-    variant: int, code: str, magnitude: float, plan: list[Placement],
+    variant: int, code: str, magnitude: float, plan: list[Placement], audited: bool = True,
 ) -> dict[str, Any] | None:  # fmt: skip
     config = load_config()
     flaws = [p.flaw for p in plan]
@@ -192,11 +204,13 @@ def _make_clip(
     untouched = [
         i for i in kept if not any(f.start < words[i].end and words[i].start < f.end for f in flaws)
     ]
-    try:
-        median, p95 = drift_ms(encoder, result, reference, kept, untouched)
-    except AlignmentError:
-        median, p95 = float("inf"), float("inf")
-    if median > MAX_DRIFT_MS:
+    median = p95 = float("nan")
+    if audited:
+        try:
+            median, p95 = drift_ms(encoder, result, reference, kept, untouched)
+        except AlignmentError:
+            median, p95 = float("inf"), float("inf")
+    if audited and median > MAX_DRIFT_MS:
         failures.append("drift")
     if failures:
         print(f"  gate failed {clip_id}: {failures} drift {median:.0f} ms", flush=True)
@@ -218,7 +232,8 @@ def _make_clip(
         "speaker": baseline["speaker"], "synthetic_modification": kind != "control",
         "generator": "psola", "impl_family": "A",
         "coverage": round(coverage(plan, len(samples) / 16_000), 4),
-        "drift_ms_median": round(median, 2), "drift_ms_p95": round(p95, 2),
+        "drift_ms_median": None if median != median else round(median, 2),
+        "drift_ms_p95": None if p95 != p95 else round(p95, 2), "drift_audited": audited,
         "regions": [{**asdict(label), "start": round(label.start, 4), "end": round(label.end, 4),
                      "source_start": round(label.source_start, 4),
                      "source_end": round(label.source_end, 4)} for label in result.labels],
